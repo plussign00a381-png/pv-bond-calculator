@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>割引現在価値・債券計算機｜現在価値・年金現価・最終利回りを無料で計算</title>
+<meta name="description" content="現在価値・将来価値（単利と複利の比較）、年金現価・年金終価、債券の価格と最終利回り（単利・複利）を、数値を入力するだけで計算できる無料ツールです。計算式と計算過程も表示します。">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:title" content="割引現在価値・債券計算機">
+<meta property="og:description" content="現在価値・将来価値、年金現価、債券の価格と最終利回りを計算。単利と複利の比較、計算式の表示つき。">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e8edeb; --panel:#f7f9f8; --field:#ffffff;
+  --ink:#12202b; --sub:#5a6b75; --line:#c7d2ce;
+  --accent:#0b6e63; --accent-ink:#ffffff; --amber:#c9801a; --err:#a1400f;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0e181d; --panel:#15242b; --field:#0e181d;
+    --ink:#e6eef0; --sub:#93a6ae; --line:#2a3d45;
+    --accent:#3fb8a6; --accent-ink:#04201c; --amber:#e0a04a; --err:#f08b57;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  line-height:1.7; font-feature-settings:"palt";
+}
+.wrap{max-width:1040px; margin:0 auto; padding:28px 20px 56px}
+h1{font-size:clamp(22px,3.4vw,30px); font-weight:900; margin:0 0 4px; letter-spacing:.01em}
+.lead{margin:0 0 22px; color:var(--sub); font-size:14.5px}
+
+.tabs{display:flex; gap:4px; border-bottom:2px solid var(--line); margin-bottom:22px; flex-wrap:wrap}
+.tabs button{
+  font:inherit; font-weight:700; font-size:15.5px; color:var(--sub);
+  background:none; border:0; border-bottom:3px solid transparent; margin-bottom:-2px;
+  padding:10px 16px; cursor:pointer;
+}
+.tabs button[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--accent)}
+.tabs button:hover{color:var(--ink)}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+
+.grid{display:grid; gap:22px}
+@media (min-width:860px){ .grid{grid-template-columns:minmax(300px,370px) 1fr; align-items:start} }
+.panel{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:22px}
+
+.field{margin-bottom:18px}
+.field:last-child{margin-bottom:0}
+.field > label, .field > .lab{display:block; font-weight:700; font-size:14.5px; margin-bottom:6px}
+.hint{color:var(--sub); font-size:12.5px; margin-top:4px; line-height:1.5}
+.inp{position:relative}
+.inp input{padding-right:3.2em}
+.inp .u{position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--sub); font-size:14px; pointer-events:none}
+input[type=number], select{
+  width:100%; font:inherit; font-size:17px; font-variant-numeric:tabular-nums;
+  padding:9px 12px; color:var(--ink); background:var(--field);
+  border:1px solid var(--line); border-radius:6px;
+}
+.seg{display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--field)}
+.seg label{position:relative; text-align:center; font-size:13.5px; font-weight:700; padding:9px 6px; cursor:pointer; color:var(--sub); line-height:1.4}
+.seg label + label{border-left:1px solid var(--line)}
+.seg input{position:absolute; opacity:0; inset:0; margin:0; cursor:pointer}
+.seg label:has(input:checked){background:var(--accent); color:var(--accent-ink)}
+.seg label:has(input:focus-visible){outline:3px solid var(--accent); outline-offset:-3px}
+[hidden]{display:none !important}
+
+.hero .cap{color:var(--sub); font-size:14px; font-weight:500}
+.hero .v{font-size:clamp(40px,7.2vw,64px); font-weight:900; line-height:1.12; letter-spacing:-.01em; font-variant-numeric:tabular-nums; word-break:break-all}
+.hero .v .u{font-size:.38em; font-weight:700; margin-left:.25em; color:var(--sub)}
+.hero .sub{margin-top:2px; color:var(--sub); font-size:14px}
+
+.formula{margin:20px 0 0; padding:12px 16px; border-left:4px solid var(--accent); background:var(--field); border-radius:0 6px 6px 0; font-size:14.5px}
+.formula .eq{font-weight:700; font-variant-numeric:tabular-nums; margin-top:4px; overflow-wrap:anywhere}
+.formula .note{color:var(--sub); font-size:12.5px; margin-top:4px}
+
+dl.metrics{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px 22px; margin:22px 0 0; padding-top:20px; border-top:1px solid var(--line)}
+dl.metrics div{min-width:0}
+dl.metrics dt{color:var(--sub); font-size:13px; line-height:1.4}
+dl.metrics dd{margin:2px 0 0; font-weight:700; font-size:17.5px; font-variant-numeric:tabular-nums}
+
+.compo{margin-top:24px}
+.compo .t{font-size:14px; font-weight:700; margin-bottom:8px}
+.bar{display:flex; height:16px; border-radius:8px; overflow:hidden; background:var(--line)}
+.bar i{display:block; height:100%}
+.legend{display:flex; flex-wrap:wrap; gap:6px 20px; margin-top:8px; font-size:13px; color:var(--sub)}
+.legend b{color:var(--ink); font-variant-numeric:tabular-nums}
+.dot{display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px}
+
+details{margin-top:22px; border-top:1px solid var(--line); padding-top:14px}
+summary{cursor:pointer; font-weight:700; font-size:14.5px}
+.scroll{max-height:320px; overflow:auto; margin-top:10px; border:1px solid var(--line); border-radius:6px; background:var(--field)}
+table{border-collapse:collapse; width:100%; font-size:13.5px; font-variant-numeric:tabular-nums}
+th,td{padding:6px 10px; text-align:right; white-space:nowrap}
+th{position:sticky; top:0; background:var(--panel); border-bottom:1px solid var(--line); font-weight:700}
+tbody tr + tr td{border-top:1px solid var(--line)}
+tfoot td{font-weight:700; border-top:2px solid var(--line); position:sticky; bottom:0; background:var(--panel)}
+
+.msg{margin:0; padding:14px 16px; border-left:4px solid var(--err); background:var(--field); border-radius:0 6px 6px 0; color:var(--err); font-weight:700}
+.msg span{display:block; color:var(--sub); font-weight:400; font-size:13.5px; margin-top:2px}
+.chart{width:100%; height:auto; display:block; margin-top:6px}
+.cmp{margin-top:12px}
+.cmp th:first-child,.cmp td:first-child{text-align:left}
+.cmp thead th{position:static}
+.about{margin-top:34px; padding-top:22px; border-top:1px solid var(--line); max-width:70ch}
+.about h2{font-size:17px; font-weight:900; margin:22px 0 4px}
+.about h2:first-child{margin-top:0}
+.about p{margin:0; font-size:14.5px; color:var(--ink)}
+.foot{margin-top:28px; color:var(--sub); font-size:12.5px; line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>割引現在価値・債券計算機</h1>
+  <p class="lead">金額・利率・期間などを入力すると、その場で計算します。</p>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-pvfv" aria-selected="true" aria-controls="in-pvfv" data-tab="pvfv">現在価値・将来価値</button>
+    <button role="tab" id="tab-annuity" aria-selected="false" aria-controls="in-annuity" data-tab="annuity">年金（現価・終価）</button>
+    <button role="tab" id="tab-bond" aria-selected="false" aria-controls="in-bond" data-tab="bond">債券（価格・利回り）</button>
+  </div>
+
+  <div class="grid">
+    <!-- 入力 -->
+    <div class="panel">
+      <!-- 現在価値・将来価値 -->
+      <div id="in-pvfv" role="tabpanel" aria-labelledby="tab-pvfv">
+        <div class="field">
+          <span class="lab" id="pv-mode-lab">求めるもの</span>
+          <div class="seg" role="radiogroup" aria-labelledby="pv-mode-lab">
+            <label><input type="radio" name="pvmode" value="pv" checked>現在価値（割り引く）</label>
+            <label><input type="radio" name="pvmode" value="fv">将来価値（増やす）</label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="pv-amount" id="pv-amount-lab">将来受け取る金額（FV）</label>
+          <div class="inp"><input type="number" id="pv-amount" value="1000000" step="any" inputmode="decimal"><span class="u">円</span></div>
+        </div>
+        <div class="field">
+          <label for="pv-rate" id="pv-rate-lab">割引率（年率）</label>
+          <div class="inp"><input type="number" id="pv-rate" value="3" step="any" inputmode="decimal"><span class="u">%</span></div>
+        </div>
+        <div class="field">
+          <label for="pv-years">期間</label>
+          <div class="inp"><input type="number" id="pv-years" value="5" step="any" min="0" inputmode="decimal"><span class="u">年</span></div>
+        </div>
+        <div class="field">
+          <span class="lab" id="pv-meth-lab">結果に使う利息の方式</span>
+          <div class="seg" role="radiogroup" aria-labelledby="pv-meth-lab">
+            <label><input type="radio" name="pvmeth" value="comp" checked>複利</label>
+            <label><input type="radio" name="pvmeth" value="simp">単利</label>
+          </div>
+          <div class="hint">単利と複利の比較は、下の結果欄に常に表示されます。</div>
+        </div>
+        <div class="field">
+          <label for="pv-freq">複利の回数</label>
+          <select id="pv-freq">
+            <option value="1">年1回</option>
+            <option value="2">年2回（半年ごと）</option>
+            <option value="4">年4回（四半期ごと）</option>
+            <option value="12">年12回（毎月）</option>
+            <option value="c">連続複利</option>
+          </select>
+          <div class="hint">複利の計算にだけ使います（単利では使いません）。</div>
+        </div>
+      </div>
+
+      <!-- 年金 -->
+      <div id="in-annuity" role="tabpanel" aria-labelledby="tab-annuity" hidden>
+        <div class="field">
+          <span class="lab" id="a-mode-lab">求めるもの</span>
+          <div class="seg" role="radiogroup" aria-labelledby="a-mode-lab">
+            <label><input type="radio" name="amode" value="pv" checked>年金現価（現在価値）</label>
+            <label><input type="radio" name="amode" value="fv">年金終価（将来価値）</label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="a-pmt">毎期の受取（支払）額</label>
+          <div class="inp"><input type="number" id="a-pmt" value="100000" step="any" inputmode="decimal"><span class="u">円</span></div>
+        </div>
+        <div class="field">
+          <label for="a-rate">割引率（年率）</label>
+          <div class="inp"><input type="number" id="a-rate" value="3" step="any" inputmode="decimal"><span class="u">%</span></div>
+        </div>
+        <div class="field">
+          <label for="a-freq">受取（支払）の回数</label>
+          <select id="a-freq">
+            <option value="1" selected>年1回</option>
+            <option value="2">年2回</option>
+            <option value="4">年4回</option>
+            <option value="12">年12回（毎月）</option>
+          </select>
+          <div class="hint">割引率は、この回数に合わせた複利（年m回複利）として扱います。</div>
+        </div>
+        <div class="field" id="f-ayears">
+          <label for="a-years">期間</label>
+          <div class="inp"><input type="number" id="a-years" value="10" step="any" min="0" inputmode="decimal"><span class="u">年</span></div>
+          <div class="hint">年数 × 回数 が整数になるように入力してください。</div>
+        </div>
+        <div class="field">
+          <span class="lab" id="a-time-lab">受取（支払）のタイミング</span>
+          <div class="seg" role="radiogroup" aria-labelledby="a-time-lab">
+            <label><input type="radio" name="atime" value="end" checked>期末（普通年金）</label>
+            <label><input type="radio" name="atime" value="begin">期首（期首払い）</label>
+          </div>
+        </div>
+        <div class="field">
+          <label style="font-weight:500;display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="a-perp" style="width:18px;height:18px">永久年金（期間が無限）として計算する</label>
+        </div>
+      </div>
+
+      <!-- 債券 -->
+      <div id="in-bond" role="tabpanel" aria-labelledby="tab-bond" hidden>
+        <div class="field">
+          <span class="lab" id="b-mode-lab">求めるもの</span>
+          <div class="seg" role="radiogroup" aria-labelledby="b-mode-lab">
+            <label><input type="radio" name="bmode" value="price" checked>価格（利回りから）</label>
+            <label><input type="radio" name="bmode" value="ytm">利回り（市場価格から）</label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="b-face">償還額面</label>
+          <div class="inp"><input type="number" id="b-face" value="1000000" step="any" min="0" inputmode="decimal"><span class="u">円</span></div>
+        </div>
+        <div class="field">
+          <label for="b-coupon">クーポン利率（年率）</label>
+          <div class="inp"><input type="number" id="b-coupon" value="2" step="any" min="0" inputmode="decimal"><span class="u">%</span></div>
+          <div class="hint">0% にすると割引債（ゼロクーポン債）になります。</div>
+        </div>
+        <div class="field">
+          <label for="b-freq">利払い回数</label>
+          <select id="b-freq">
+            <option value="1">年1回</option>
+            <option value="2" selected>年2回</option>
+            <option value="4">年4回</option>
+            <option value="12">年12回</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="b-years">残存期間（償還までの年数）</label>
+          <div class="inp"><input type="number" id="b-years" value="10" step="any" min="0" inputmode="decimal"><span class="u">年</span></div>
+          <div class="hint">年数 × 利払い回数 が整数になるように入力してください。</div>
+        </div>
+        <div class="field" id="f-yield">
+          <label for="b-yield">市場利回り（割引率・年率）</label>
+          <div class="inp"><input type="number" id="b-yield" value="3" step="any" inputmode="decimal"><span class="u">%</span></div>
+          <div class="hint">利払い回数に合わせた複利（年m回複利）として扱います。</div>
+        </div>
+        <div class="field" id="f-price" hidden>
+          <label for="b-price">市場価格</label>
+          <div class="inp"><input type="number" id="b-price" value="914000" step="any" min="0" inputmode="decimal"><span class="u">円</span></div>
+          <div class="hint">入力した額面に対する価格です（額面100円あたりではありません）。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 結果 -->
+    <div class="panel" id="result" aria-live="polite"></div>
+  </div>
+
+  <section class="about" aria-label="用語の解説">
+    <h2>現在価値と将来価値</h2>
+    <p>現在価値（PV）は、将来受け取る金額を割引率で割り引き、今の価値に直したものです。複利なら PV = FV ÷ (1 + r)^n、単利なら PV = FV ÷ (1 + r×n) で求めます。将来価値（FV）はその逆で、今の金額を運用したときの将来の金額です。</p>
+    <h2>単利と複利の違い</h2>
+    <p>単利は元本にだけ利息が付き、複利は利息にも利息が付きます。期間が長くなるほど差が広がります。このツールでは、同じ条件での両者の差をグラフと表で比べられます。</p>
+    <h2>年金現価と年金終価</h2>
+    <p>年金現価は、毎期同額を受け取る（支払う）権利の現在価値です。年金終価は、毎期同額を積み立てたときの満期時点の価値です。期末払いと期首払い、期間が無限の永久年金（PV = P ÷ i）にも対応しています。</p>
+    <h2>債券の価格と最終利回り</h2>
+    <p>債券の価格は、将来のクーポンと償還額面を市場利回りで割り引いた現在価値の合計です。最終利回りは、満期まで保有した場合の利回りです。日本の債券市場では、償還差損益を年数で均等に割る単利の最終利回りが一般的で、複利の最終利回りはクーポンを同じ利回りで再投資できると仮定した値です。このツールは両方を表示します。</p>
+  </section>
+
+  <p class="foot">学習・簡易計算用です。実際の債券取引では、経過利子・日割り計算・税金などにより価格が異なります。</p>
+</div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const fmt = (x, d = 0) => isFinite(x)
+    ? x.toLocaleString('ja-JP', {minimumFractionDigits: d, maximumFractionDigits: d}) : '—';
+  const pct = (x, d = 3) => fmt(x * 100, d) + '%';
+  const num = id => { const v = parseFloat($(id).value); return isNaN(v) ? NaN : v; };
+  const radio = name => document.querySelector('input[name=' + name + ']:checked').value;
+  const out = $('#result');
+
+  function msg(title, detail){
+    out.innerHTML = '<p class="msg">' + title + (detail ? '<span>' + detail + '</span>' : '') + '</p>';
+  }
+
+  const nstr = x => String(Math.round(x * 10000) / 10000);
+
+  /* ---------- 現在価値・将来価値 ---------- */
+  function chartSVG(gC, gS, val, n){
+    if (!(n > 0)) return '';
+    const K = 60, W = 600, H = 220, pl = 80, pr = 14, pt = 14, pb = 30;
+    const pts = []; let lo = Infinity, hi = -Infinity;
+    for (let k = 0; k <= K; k++){
+      const t = n * k / K, a = val(gC, t), b = val(gS, t);
+      pts.push([t, a, b]); lo = Math.min(lo, a, b); hi = Math.max(hi, a, b);
+    }
+    if (hi - lo < 1e-9){ lo -= 1; hi += 1; }
+    const X = t => pl + (W - pl - pr) * t / n;
+    const Y = v => pt + (H - pt - pb) * (1 - (v - lo) / (hi - lo));
+    const line = (idx, color) => '<polyline fill="none" style="stroke:' + color + '" stroke-width="2.5" stroke-linejoin="round" points="' +
+      pts.map(q => X(q[0]).toFixed(1) + ',' + Y(q[idx]).toFixed(1)).join(' ') + '"/>';
+    const txt = (x, y, anchor, t) => '<text x="' + x + '" y="' + y + '" text-anchor="' + anchor + '" font-size="11.5" style="fill:var(--sub)">' + t + '</text>';
+    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="単利と複利の推移を比べた折れ線グラフ">' +
+      '<line x1="' + pl + '" y1="' + (H - pb) + '" x2="' + (W - pr) + '" y2="' + (H - pb) + '" style="stroke:var(--line)"/>' +
+      '<line x1="' + pl + '" y1="' + pt + '" x2="' + pl + '" y2="' + (H - pb) + '" style="stroke:var(--line)"/>' +
+      txt(pl - 8, pt + 4, 'end', fmt(hi, 0)) + txt(pl - 8, H - pb, 'end', fmt(lo, 0)) +
+      txt(pl, H - 10, 'start', '0年') + txt(W - pr, H - 10, 'end', nstr(n) + '年') +
+      line(2, 'var(--amber)') + line(1, 'var(--accent)') + '</svg>';
+  }
+
+  function calcPV(){
+    const mode = radio('pvmode'), simple = radio('pvmeth') === 'simp';
+    $('#pv-amount-lab').textContent = mode === 'pv' ? '将来受け取る金額（FV）' : '今の金額（PV）';
+    $('#pv-rate-lab').textContent   = mode === 'pv' ? '割引率（年率）' : '利率（年率）';
+
+    const A = num('#pv-amount'), r = num('#pv-rate') / 100, n = num('#pv-years');
+    const f = $('#pv-freq').value, cont = f === 'c', m = cont ? 0 : parseInt(f, 10);
+
+    if ([A, r, n].some(isNaN)) return msg('すべての項目を入力してください。');
+    if (n < 0) return msg('期間は0以上で入力してください。');
+    if (!cont && 1 + r / m <= 0) return msg('利率が小さすぎます。', '(1 + 利率 ÷ 回数) が正になる値にしてください。');
+    if (1 + r * n <= 0) return msg('利率 × 期間 が −100% 以下です。', '単利の計算ができません。利率か期間を見直してください。');
+
+    const gC = t => cont ? Math.exp(r * t) : Math.pow(1 + r / m, m * t);
+    const gS = t => 1 + r * t;
+    const val = (g, t) => mode === 'pv' ? A / g(t) : A * g(t);
+
+    const g = simple ? gS(n) : gC(n);
+    const result = val(simple ? gS : gC, n);
+    const resC = val(gC, n), resS = val(gS, n);
+    const df = 1 / g;
+    const R = fmt(r * 100, 3), N = nstr(n);
+    const kind = simple ? '単利' : '複利';
+
+    let eq, sub, note;
+    if (simple){
+      eq  = mode === 'pv' ? 'PV = FV ÷ (1 + r×n)' : 'FV = PV × (1 + r×n)';
+      sub = (mode === 'pv' ? 'PV = ' + fmt(A) + ' ÷ ' : 'FV = ' + fmt(A) + ' × ') + '(1 + ' + R + '% × ' + N + ') = ' + fmt(result, 2);
+      note = 'r：年率、n：年数（利息は元本にだけ付き、利息には利息が付きません）';
+    } else if (cont){
+      eq  = mode === 'pv' ? 'PV = FV × e^(−r×n)' : 'FV = PV × e^(r×n)';
+      sub = (mode === 'pv' ? 'PV = ' + fmt(A) + ' × e^(−' : 'FV = ' + fmt(A) + ' × e^(') + R + '% × ' + N + ') = ' + fmt(result, 2);
+      note = 'r：年率、n：年数';
+    } else {
+      eq  = mode === 'pv' ? 'PV = FV ÷ (1 + r/m)^(m×n)' : 'FV = PV × (1 + r/m)^(m×n)';
+      sub = (mode === 'pv' ? 'PV = ' + fmt(A) + ' ÷ ' : 'FV = ' + fmt(A) + ' × ') + '(1 + ' + R + '% ÷ ' + m + ')^(' + m + ' × ' + N + ') = ' + fmt(result, 2);
+      note = 'r：年率、m：1年あたりの複利回数、n：年数';
+    }
+
+    const effTxt = n > 0 ? pct(Math.pow(g, 1 / n) - 1) : '—';
+    const diff = Math.abs(result - A);
+
+    const years = [];
+    const step = Math.max(1, Math.ceil(n / 120));
+    for (let t = step; t < n; t += step) years.push(t);
+    if (n > 0) years.push(n);
+    const yrows = years.map(t => {
+      const c = val(gC, t), q = val(gS, t);
+      return '<tr><td>' + nstr(t) + '</td><td>' + fmt(c, 2) + '</td><td>' + fmt(q, 2) + '</td><td>' + fmt(c - q, 2) + '</td></tr>';
+    }).join('');
+    const valHead = mode === 'pv' ? '現在価値' : '元利合計';
+
+    out.innerHTML =
+      '<div class="hero">' +
+        '<div class="cap">' + (mode === 'pv' ? '現在価値（PV）' : '将来価値（FV）') + '・' + kind + '</div>' +
+        '<div class="v">' + fmt(result, 0) + '<span class="u">円</span></div>' +
+        '<div class="sub">' + fmt(A) + '円の' + (mode === 'pv' ? '将来' : '現在') + '価値を' + N + '年分' + (mode === 'pv' ? '割り引いた額' : '運用した額') + '（' + kind + '）</div>' +
+      '</div>' +
+      '<div class="formula"><div>' + eq + '</div><div class="eq">' + sub + '</div><div class="note">' + note + '</div></div>' +
+      '<dl class="metrics">' +
+        '<div><dt>割引係数（1円の現在価値）</dt><dd>' + fmt(df, 6) + '</dd></div>' +
+        '<div><dt>実効年利（年複利換算）</dt><dd>' + effTxt + '</dd></div>' +
+        '<div><dt>' + (mode === 'pv' ? '割り引かれた額' : '増えた額') + '</dt><dd>' + fmt(diff, 0) + '円</dd></div>' +
+        '<div><dt>' + (mode === 'pv' ? '現在価値 ÷ 将来価値' : '将来価値 ÷ 現在価値') + '</dt><dd>' + fmt(mode === 'pv' ? df : g, 4) + '倍</dd></div>' +
+      '</dl>' +
+      '<div class="compo">' +
+        '<div class="t">単利と複利の比較（' + N + '年）</div>' +
+        chartSVG(gC, gS, val, n) +
+        '<div class="legend">' +
+          '<span><span class="dot" style="background:var(--accent)"></span>複利</span>' +
+          '<span><span class="dot" style="background:var(--amber)"></span>単利</span>' +
+        '</div>' +
+        '<table class="cmp"><thead><tr><th>方式</th><th>係数</th><th>' + (mode === 'pv' ? '現在価値' : '将来価値') + '</th></tr></thead><tbody>' +
+          '<tr><td>複利</td><td>' + fmt(gC(n), 6) + '</td><td>' + fmt(resC, 2) + '</td></tr>' +
+          '<tr><td>単利</td><td>' + fmt(gS(n), 6) + '</td><td>' + fmt(resS, 2) + '</td></tr>' +
+          '<tr><td>差（複利 − 単利）</td><td>' + fmt(gC(n) - gS(n), 6) + '</td><td>' + fmt(resC - resS, 2) + '</td></tr>' +
+        '</tbody></table>' +
+      '</div>' +
+      (years.length ? '<details><summary>年ごとの比較表</summary><div class="scroll"><table><thead><tr><th>年</th><th>' + valHead + '（複利）</th><th>' + valHead + '（単利）</th><th>差</th></tr></thead><tbody>' + yrows + '</tbody></table></div></details>' : '');
+  }
+
+  /* ---------- 年金 ---------- */
+  function calcAnnuity(){
+    const mode = radio('amode'), due = radio('atime') === 'begin', perp = $('#a-perp').checked;
+    $('#f-ayears').hidden = perp;
+
+    const P = num('#a-pmt'), r = num('#a-rate') / 100, m = parseInt($('#a-freq').value, 10), N = num('#a-years');
+    if ([P, r].some(isNaN) || (!perp && isNaN(N))) return msg('すべての項目を入力してください。');
+    const i = r / m;
+    if (i <= -1) return msg('割引率が小さすぎます。');
+    const iPct = fmt(i * 100, 4) + '%';
+    const timing = due ? '期首払い' : '期末払い';
+
+    if (perp){
+      if (i <= 0) return msg('永久年金の現在価値は、割引率が0%より大きいときだけ計算できます。');
+      if (mode === 'fv') return msg('永久年金の終価は無限大になります。', '「年金現価」を選ぶか、永久年金のチェックを外して期間を指定してください。');
+      const pv = P / i * (due ? 1 + i : 1);
+      out.innerHTML =
+        '<div class="hero"><div class="cap">年金現価（永久年金・' + timing + '）</div>' +
+          '<div class="v">' + fmt(pv, 0) + '<span class="u">円</span></div>' +
+          '<div class="sub">毎期' + fmt(P) + '円を永久に受け取る権利の現在価値</div></div>' +
+        '<div class="formula"><div>' + (due ? 'PV = P ÷ i × (1 + i)' : 'PV = P ÷ i') + '</div>' +
+          '<div class="eq">PV = ' + fmt(P) + ' ÷ ' + iPct + (due ? ' × (1 + ' + iPct + ')' : '') + ' = ' + fmt(pv, 2) + '</div>' +
+          '<div class="note">P：毎期の金額、i：1期あたりの利率（年率 ÷ 年の回数）</div></div>' +
+        '<dl class="metrics">' +
+          '<div><dt>1期あたりの利率 i</dt><dd>' + iPct + '</dd></div>' +
+          '<div><dt>年金現価係数（1円あたり）</dt><dd>' + fmt(pv / P, 4) + '</dd></div>' +
+          '<div><dt>1年あたりの受取額</dt><dd>' + fmt(P * m, 0) + '円</dd></div>' +
+        '</dl>';
+      return;
+    }
+
+    if (N <= 0) return msg('期間は0より大きい値にしてください。');
+    const n = Math.round(N * m);
+    if (Math.abs(N * m - n) > 1e-6 || n < 1)
+      return msg('期間 × 回数 が整数になりません。', '例：年4回なら、期間は0.25年刻みで入力してください。');
+    if (n > 1200) return msg('期間が長すぎます。', '受取回数の合計は1200回以内にしてください。');
+
+    const zero = Math.abs(i) < 1e-12;
+    const gN = Math.pow(1 + i, n);
+    let pvF = zero ? n : (1 - 1 / gN) / i;
+    let fvF = zero ? n : (gN - 1) / i;
+    if (due){ pvF *= 1 + i; fvF *= 1 + i; }
+    const PV = P * pvF, FV = P * fvF, total = P * n;
+    const main = mode === 'pv' ? PV : FV;
+
+    const dueTxt = due ? ' × (1 + i)' : '';
+    const eq = mode === 'pv'
+      ? 'PV = P × {1 − (1 + i)^(−n)} ÷ i' + dueTxt
+      : 'FV = P × {(1 + i)^n − 1} ÷ i' + dueTxt;
+    const iTxt = '(1 + ' + iPct + ')';
+    const sub = mode === 'pv'
+      ? 'PV = ' + fmt(P) + ' × {1 − ' + iTxt + '^(−' + n + ')} ÷ ' + iPct + (due ? ' × ' + iTxt : '') + ' = ' + fmt(PV, 2)
+      : 'FV = ' + fmt(P) + ' × {' + iTxt + '^' + n + ' − 1} ÷ ' + iPct + (due ? ' × ' + iTxt : '') + ' = ' + fmt(FV, 2);
+
+    let sum = 0;
+    const body = [];
+    for (let t = 1; t <= n; t++){
+      const k = due ? t - 1 : t;
+      const df = 1 / Math.pow(1 + i, k), pv = P * df;
+      sum += pv;
+      body.push('<tr><td>' + t + '</td><td>' + fmt(k / m, 2) + '</td><td>' + fmt(P, 2) + '</td><td>' + fmt(df, 6) + '</td><td>' + fmt(pv, 2) + '</td></tr>');
+    }
+
+    out.innerHTML =
+      '<div class="hero"><div class="cap">' + (mode === 'pv' ? '年金現価（現在価値）' : '年金終価（将来価値）') + '・' + timing + '</div>' +
+        '<div class="v">' + fmt(main, 0) + '<span class="u">円</span></div>' +
+        '<div class="sub">毎期' + fmt(P) + '円を' + n + '回' + (mode === 'pv' ? '受け取る権利の現在価値' : '積み立てたときの満期の価値') + '</div></div>' +
+      '<div class="formula"><div>' + eq + '</div><div class="eq">' + sub + '</div>' +
+        '<div class="note">P：毎期の金額、i：1期あたりの利率（年率 ÷ 年の回数）、n：回数の合計</div></div>' +
+      '<dl class="metrics">' +
+        '<div><dt>' + (mode === 'pv' ? '年金終価' : '年金現価') + '</dt><dd>' + fmt(mode === 'pv' ? FV : PV, 0) + '円</dd></div>' +
+        '<div><dt>受取（支払）の合計</dt><dd>' + fmt(total, 0) + '円</dd></div>' +
+        '<div><dt>' + (mode === 'pv' ? '割り引かれた額（合計 − 現価）' : '利息分（終価 − 合計）') + '</dt><dd>' + fmt(mode === 'pv' ? total - PV : FV - total, 0) + '円</dd></div>' +
+        '<div><dt>年金現価係数</dt><dd>' + fmt(pvF, 4) + '</dd></div>' +
+        '<div><dt>年金終価係数</dt><dd>' + fmt(fvF, 4) + '</dd></div>' +
+        '<div><dt>1期あたりの利率 i</dt><dd>' + iPct + '</dd></div>' +
+      '</dl>' +
+      '<details><summary>キャッシュフロー表（' + n + '回）</summary><div class="scroll"><table><thead><tr><th>回</th><th>時点（年）</th><th>金額</th><th>割引係数</th><th>現在価値</th></tr></thead>' +
+        '<tbody>' + body.join('') + '</tbody>' +
+        '<tfoot><tr><td colspan="2">合計</td><td>' + fmt(total, 2) + '</td><td></td><td>' + fmt(sum, 2) + '</td></tr></tfoot></table></div></details>';
+  }
+
+  /* ---------- 債券 ---------- */
+  function priceAt(rows, i){
+    let p = 0;
+    for (const r of rows) p += r.cf / Math.pow(1 + i, r.t);
+    return p;
+  }
+
+  function calcBond(){
+    const mode = radio('bmode');
+    $('#f-yield').hidden = mode !== 'price';
+    $('#f-price').hidden = mode !== 'ytm';
+
+    const F = num('#b-face'), c = num('#b-coupon') / 100, N = num('#b-years');
+    const m = parseInt($('#b-freq').value, 10);
+
+    if ([F, c, N].some(isNaN)) return msg('すべての項目を入力してください。');
+    if (F <= 0) return msg('額面は0より大きい値にしてください。');
+    if (c < 0)  return msg('クーポン利率は0以上で入力してください。');
+    if (N <= 0) return msg('残存期間は0より大きい値にしてください。');
+    const n = Math.round(N * m);
+    if (Math.abs(N * m - n) > 1e-6 || n < 1)
+      return msg('残存期間 × 利払い回数 が整数になりません。', '例：年2回払いなら、残存期間は0.5年刻みで入力してください。');
+    if (n > 1200) return msg('期間が長すぎます。', '利払い回数の合計は1200回以内にしてください。');
+
+    const C = F * c / m;
+    const rows = [];
+    for (let t = 1; t <= n; t++) rows.push({t: t, years: t / m, cf: C + (t === n ? F : 0)});
+
+    let i, y, price;
+    if (mode === 'price'){
+      y = num('#b-yield') / 100;
+      if (isNaN(y)) return msg('市場利回りを入力してください。');
+      i = y / m;
+      if (i <= -1) return msg('利回りが小さすぎます。');
+      price = priceAt(rows, i);
+    } else {
+      price = num('#b-price');
+      if (isNaN(price) || price <= 0) return msg('市場価格は0より大きい値で入力してください。');
+      let lo = -0.9, hi = 5;
+      if (price > priceAt(rows, lo) || price < priceAt(rows, hi))
+        return msg('この条件では利回りを計算できません。', '価格・クーポン・期間の組み合わせを見直してください。');
+      for (let k = 0; k < 200; k++){
+        const mid = (lo + hi) / 2;
+        if (priceAt(rows, mid) > price) lo = mid; else hi = mid;
+      }
+      i = (lo + hi) / 2;
+      y = i * m;
+    }
+
+    // 内訳・デュレーション
+    let pvC = 0, wSum = 0;
+    const pvs = rows.map(r => {
+      const df = 1 / Math.pow(1 + i, r.t);
+      const pv = r.cf * df;
+      wSum += r.years * pv;
+      if (r.t < n) pvC += C * df;
+      return {df: df, pv: pv};
+    });
+    const pvFace = F / Math.pow(1 + i, n);
+    pvC += C * (1 / Math.pow(1 + i, n));       // 最終回のクーポン分
+    const mac = wSum / price;
+    const mod = mac / (1 + i);
+    const eff = Math.pow(1 + i, m) - 1;
+    const per100 = price / F * 100;
+    const curY = c > 0 ? (F * c) / price : null;
+    const ySimple = (F * c + (F - price) / N) / price;   // 最終利回り（単利）
+
+    let status;
+    const gap = price - F;
+    if (c === 0) status = '割引債（ゼロクーポン債）';
+    else if (Math.abs(gap) < F * 1e-6) status = 'パー（額面と同じ）';
+    else status = gap > 0 ? 'プレミアム債（額面より高い）' : 'ディスカウント債（額面より安い）';
+
+    const heroCap = mode === 'price' ? '債券価格' : '最終利回り（複利・年率）';
+    const heroVal = mode === 'price'
+      ? fmt(price, 0) + '<span class="u">円</span>'
+      : fmt(y * 100, 3) + '<span class="u">%</span>';
+    const heroSub = mode === 'price'
+      ? '額面100円あたり ' + fmt(per100, 3) + '円（' + status + '）'
+      : '市場価格 ' + fmt(price, 0) + '円（額面100円あたり ' + fmt(per100, 3) + '円）';
+
+    const iPct = fmt(i * 100, 4);
+    const eqText = '価格 = Σ クーポン ÷ (1 + i)^t ＋ 額面 ÷ (1 + i)^n';
+    const eqSub = 'i = ' + fmt(y * 100, 3) + '% ÷ ' + m + ' = ' + iPct + '%、　クーポン = ' + fmt(C, 2) + '円／回、　n = ' + n + '期';
+
+    const total = pvC + pvFace;
+    const sC = total > 0 ? pvC / total * 100 : 0;
+    const sF = 100 - sC;
+
+    const body = pvs.map((p, k) =>
+      '<tr><td>' + rows[k].t + '</td><td>' + fmt(rows[k].years, 2) + '</td><td>' + fmt(rows[k].cf, 2) +
+      '</td><td>' + fmt(p.df, 6) + '</td><td>' + fmt(p.pv, 2) + '</td></tr>').join('');
+
+    out.innerHTML =
+      '<div class="hero">' +
+        '<div class="cap">' + heroCap + '</div>' +
+        '<div class="v">' + heroVal + '</div>' +
+        '<div class="sub">' + heroSub + '</div>' +
+      '</div>' +
+      '<div class="formula"><div>' + eqText + '</div><div class="eq">' + eqSub + '</div>' +
+        '<div class="note">t：何回目の利払いか。最後の回（t = n）は額面も受け取ります。' +
+        (mode === 'ytm' ? ' 利回りは、価格が市場価格と一致する i を数値的に探して求めています。' : '') + '</div></div>' +
+      '<div class="formula"><div>最終利回り（単利）= {年間クーポン + (額面 − 価格) ÷ 残存年数} ÷ 価格</div>' +
+        '<div class="eq">= {' + fmt(F * c, 2) + ' + (' + fmt(F, 2) + ' − ' + fmt(price, 2) + ') ÷ ' + nstr(N) + '} ÷ ' + fmt(price, 2) + ' = ' + pct(ySimple) + '</div>' +
+        '<div class="note">日本の債券市場で一般的な表し方です。クーポンの再投資は考えず、償還差損益を年数で均等に割ります。複利の最終利回りは、クーポンを同じ利回りで再投資できると仮定した値です。</div></div>' +
+      '<div class="compo">' +
+        '<div class="t">価格の内訳（現在価値）</div>' +
+        '<div class="bar" role="img" aria-label="クーポンの現在価値' + fmt(sC, 1) + '%、額面の現在価値' + fmt(sF, 1) + '%">' +
+          '<i style="width:' + sC + '%;background:var(--amber)"></i><i style="width:' + sF + '%;background:var(--accent)"></i></div>' +
+        '<div class="legend">' +
+          '<span><span class="dot" style="background:var(--amber)"></span>クーポン合計 <b>' + fmt(pvC, 0) + '円</b>（' + fmt(sC, 1) + '%）</span>' +
+          '<span><span class="dot" style="background:var(--accent)"></span>額面の現在価値 <b>' + fmt(pvFace, 0) + '円</b>（' + fmt(sF, 1) + '%）</span>' +
+        '</div>' +
+      '</div>' +
+      '<dl class="metrics">' +
+        '<div><dt>債券価格</dt><dd>' + fmt(price, 0) + '円</dd></div>' +
+        '<div><dt>実効年利（年複利換算）</dt><dd>' + pct(eff) + '</dd></div>' +
+        '<div><dt>最終利回り（単利）</dt><dd>' + pct(ySimple) + '</dd></div>' +
+        '<div><dt>最終利回り（複利・年率）</dt><dd>' + pct(y) + '</dd></div>' +
+        '<div><dt>1回あたりのクーポン</dt><dd>' + fmt(C, 2) + '円</dd></div>' +
+        '<div><dt>現在利回り（年クーポン ÷ 価格）</dt><dd>' + (curY === null ? '—' : pct(curY)) + '</dd></div>' +
+        '<div><dt>マコーレー・デュレーション</dt><dd>' + fmt(mac, 3) + '年</dd></div>' +
+        '<div><dt>修正デュレーション</dt><dd>' + fmt(mod, 3) + '</dd></div>' +
+        (mode === 'ytm' ? '<div><dt>位置づけ</dt><dd>' + status + '</dd></div>' : '') +
+        '<div><dt>受け取る総額（額面＋クーポン）</dt><dd>' + fmt(C * n + F, 0) + '円</dd></div>' +
+      '</dl>' +
+      '<details><summary>キャッシュフロー表（' + n + '期）</summary>' +
+        '<div class="scroll"><table><thead><tr><th>期</th><th>時点（年）</th><th>キャッシュフロー</th><th>割引係数</th><th>現在価値</th></tr></thead>' +
+        '<tbody>' + body + '</tbody>' +
+        '<tfoot><tr><td colspan="2">合計</td><td>' + fmt(C * n + F, 2) + '</td><td></td><td>' + fmt(total, 2) + '</td></tr></tfoot></table></div>' +
+      '</details>';
+  }
+
+  /* ---------- 切り替え・イベント ---------- */
+  let tab = 'pvfv';
+  function update(){
+    if (tab === 'pvfv') calcPV();
+    else if (tab === 'annuity') calcAnnuity();
+    else calcBond();
+  }
+
+  function setTab(t){
+    tab = t;
+    $('#in-pvfv').hidden = t !== 'pvfv';
+    $('#in-annuity').hidden = t !== 'annuity';
+    $('#in-bond').hidden = t !== 'bond';
+    document.querySelectorAll('.tabs button').forEach(b =>
+      b.setAttribute('aria-selected', b.dataset.tab === t ? 'true' : 'false'));
+    update();
+  }
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+  document.addEventListener('input', update);
+  document.addEventListener('change', update);
+  setTab('pvfv');
+})();
+</script>
+</body>
+</html>
